@@ -15,3 +15,8 @@ To implement basic TCP communication between a client and server using sockets i
 ```bash
 g++ tcpserver.cpp -o server
 g++ tcpclient.cpp -o client
+
+## 📸 Output / Execution
+
+### Mininet Simulation
+![Mininet Output](./screenshots/output.png)
