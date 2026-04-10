@@ -5,3 +5,4 @@ Documenting my SDN lab journey through hands-on implementations.
 
 ## 📂 Assignments
 - ✅ Assignment 1: TCP Client-Server
+- ✅ [Assignment 2: Arithmetic Server](./Arithmetic-Server)
