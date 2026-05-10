@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUIC Chat</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="top-bar">
+        <h1>QUIC Multi Client Chat</h1>
+    </div>
+
+    <div class="join-area">
+
+        <input
+            type="text"
+            id="usernameInput"
+            placeholder="Enter your name"
+        >
+
+        <button id="joinBtn">
+            Join Chat
+        </button>
+
+    </div>
+
+    <div id="chatArea" class="hidden">
+
+        <div id="messages"></div>
+
+        <div class="input-area">
+
+            <input
+                type="text"
+                id="messageInput"
+                placeholder="Message or @name private message"
+            >
+
+            <button id="sendBtn">
+                Send
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
