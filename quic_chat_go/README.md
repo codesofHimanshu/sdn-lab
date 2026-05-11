@@ -216,15 +216,15 @@ Message is only sent to the specified user.
 
 ## UI Image 1
 
-![UI1](Screenshots/UI img1.png)
+![UI1](Screenshots/UI-img1.png)
 
 ## UI Image 2
 
-![UI2](Screenshots/UI img2.png)
+![UI2](Screenshots/UI-img2.png)
 
 ## UI Image 3
 
-![UI3](Screenshots/UI img3.png)
+![UI3](Screenshots/UI-img3.png)
 
 ---
 
