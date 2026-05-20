@@ -2,22 +2,28 @@ package main
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
-	"strings"
-	"sync"
 
 	"github.com/gorilla/websocket"
 )
 
-type Client struct {
-	Name string
-	Conn *websocket.Conn
+type Message struct {
+	Type     string   `json:"type"`
+	Username string   `json:"username"`
+	Password string   `json:"password"`
+	Message  string   `json:"message"`
+	Users    []string `json:"users,omitempty"`
 }
 
-var clients = make(map[string]*Client)
-var mutex sync.Mutex
+var users = map[string]string{
+	"himanshu": "1234",
+	"test":     "1234",
+}
+
+var clients = make(map[string]*websocket.Conn)
 
 var upgrader = websocket.Upgrader{
 	CheckOrigin: func(r *http.Request) bool {
@@ -27,16 +33,12 @@ var upgrader = websocket.Upgrader{
 
 func main() {
 
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Secure Chat Server Running")
-	})
-
-	http.HandleFunc("/ws", handleConnections)
+	http.HandleFunc("/ws", handleWS)
 
 	server := &http.Server{
 		Addr: ":4433",
 		TLSConfig: &tls.Config{
-			MinVersion: tls.VersionTLS13,
+			MinVersion: tls.VersionTLS12,
 		},
 	}
 
@@ -52,122 +54,123 @@ func main() {
 	}
 }
 
-func handleConnections(w http.ResponseWriter, r *http.Request) {
+func handleWS(w http.ResponseWriter, r *http.Request) {
 
 	conn, err := upgrader.Upgrade(w, r, nil)
+
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 		return
 	}
 
-	_, usernameBytes, err := conn.ReadMessage()
-	if err != nil {
-		return
-	}
+	handleConnection(conn)
+}
 
-	username := strings.TrimSpace(string(usernameBytes))
+func handleConnection(conn *websocket.Conn) {
 
-	client := &Client{
-		Name: username,
-		Conn: conn,
-	}
+	defer conn.Close()
 
-	mutex.Lock()
-	clients[username] = client
-	mutex.Unlock()
-
-	log.Println(username + " connected")
-
-	broadcast(
-		"SERVER: "+username+" joined the chat",
-		username,
-	)
+	var currentUser string
 
 	for {
 
-		_, msgBytes, err := conn.ReadMessage()
+		_, data, err := conn.ReadMessage()
 
 		if err != nil {
 
-			mutex.Lock()
-			delete(clients, username)
-			mutex.Unlock()
+			fmt.Println(err)
 
-			log.Println(username + " disconnected")
+			if currentUser != "" {
 
-			broadcast(
-				"SERVER: "+username+" left the chat",
-				username,
-			)
+				delete(clients, currentUser)
 
-			return
-		}
-
-		message := string(msgBytes)
-
-		log.Println(username + ": " + message)
-
-		if strings.HasPrefix(message, "@") {
-
-			parts := strings.SplitN(message, " ", 2)
-
-			if len(parts) < 2 {
-				continue
+				broadcastUsers()
 			}
 
-			target := strings.TrimPrefix(parts[0], "@")
-			privateMessage := parts[1]
-
-			sendPrivate(
-				username,
-				target,
-				privateMessage,
-			)
-
-		} else {
-
-			broadcast(
-				username+": "+message,
-				username,
-			)
+			break
 		}
-	}
-}
 
-func broadcast(message string, sender string) {
+		var msg Message
 
-	mutex.Lock()
-	defer mutex.Unlock()
+		err = json.Unmarshal(data, &msg)
 
-	for username, client := range clients {
+		if err != nil {
 
-		if username == sender {
+			fmt.Println(err)
 			continue
 		}
 
-		client.Conn.WriteMessage(
-			websocket.TextMessage,
-			[]byte(message),
-		)
+		// LOGIN
+
+		if msg.Type == "login" {
+
+			pass, exists := users[msg.Username]
+
+			if !exists || pass != msg.Password {
+
+				conn.WriteJSON(Message{
+					Type:    "chat",
+					Message: "Invalid credentials",
+				})
+
+				continue
+			}
+
+			currentUser = msg.Username
+
+			clients[currentUser] = conn
+
+			conn.WriteJSON(Message{
+				Type: "login_success",
+			})
+
+			broadcastUsers()
+
+			fmt.Println(currentUser, "connected")
+
+			continue
+		}
+
+		// CHAT
+
+		if msg.Type == "chat" {
+
+			text := currentUser + ": " + msg.Message
+
+			broadcast(text)
+		}
 	}
 }
 
-func sendPrivate(sender string, target string, message string) {
+func broadcast(message string) {
 
-	mutex.Lock()
-	defer mutex.Unlock()
-
-	client, exists := clients[target]
-
-	if !exists {
-		return
+	msg := Message{
+		Type:    "chat",
+		Message: message,
 	}
 
-	privateText :=
-		"[PRIVATE] " + sender + ": " + message
+	for _, conn := range clients {
 
-	client.Conn.WriteMessage(
-		websocket.TextMessage,
-		[]byte(privateText),
-	)
+		conn.WriteJSON(msg)
+	}
+}
+
+func broadcastUsers() {
+
+	var list []string
+
+	for username := range clients {
+
+		list = append(list, username)
+	}
+
+	msg := Message{
+		Type:  "users",
+		Users: list,
+	}
+
+	for _, conn := range clients {
+
+		conn.WriteJSON(msg)
+	}
 }

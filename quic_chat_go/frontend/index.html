@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUIC Chat</title>
+    <title>Secure Video Chat</title>
 
     <link rel="stylesheet" href="style.css">
 </head>
@@ -12,24 +12,95 @@
 <div class="container">
 
     <div class="top-bar">
-        <h1>QUIC Multi Client Chat</h1>
+        <h1>Secure Real-Time Chat</h1>
     </div>
 
-    <div class="join-area">
+    <!-- LOGIN AREA -->
+
+    <div id="loginArea" class="login-area">
 
         <input
             type="text"
             id="usernameInput"
-            placeholder="Enter your name"
+            placeholder="Username"
         >
 
-        <button id="joinBtn">
-            Join Chat
+        <input
+            type="password"
+            id="passwordInput"
+            placeholder="Password"
+        >
+
+        <button id="loginBtn">
+            Login
         </button>
 
     </div>
 
-    <div id="chatArea" class="hidden">
+    <!-- MAIN CHAT AREA -->
+
+    <div id="mainArea" class="hidden">
+
+        <!-- ONLINE USERS -->
+
+        <div class="users-panel">
+
+            <h3>Online Users</h3>
+
+            <div id="usersList"></div>
+
+        </div>
+
+        <!-- VIDEO AREA -->
+
+        <div class="video-container">
+
+            <div class="video-box">
+
+                <h3>Your Video</h3>
+
+                <video
+                    id="localVideo"
+                    autoplay
+                    muted
+                    playsinline
+                ></video>
+
+            </div>
+
+            <div class="video-box">
+
+                <h3>Remote Video</h3>
+
+                <video
+                    id="remoteVideo"
+                    autoplay
+                    playsinline
+                ></video>
+
+            </div>
+
+        </div>
+
+        <!-- VIDEO CONTROLS -->
+
+        <div class="video-controls">
+
+            <button id="startCameraBtn">
+                Start Camera
+            </button>
+
+            <button id="muteBtn">
+                Mute
+            </button>
+
+            <button id="cameraBtn">
+                Camera Off
+            </button>
+
+        </div>
+
+        <!-- CHAT -->
 
         <div id="messages"></div>
 
